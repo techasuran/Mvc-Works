@@ -1,0 +1,198 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/datepickr.min.css" rel="stylesheet" />
+    <script src="~/datepickr.min.js"></script>
+    <script src="@Url.Content("~/jquery-1.11.2.min.js")"></script>
+    <script src="~/jquery.canvasjs.min.js"></script>
+
+    <title>Index</title>
+    <script type="text/javascript">
+        //'{name:"'+ a + '"}'
+        var a = 'a';
+        var param = { name: "nevin" };
+        var param1 = { name: a };
+        $(document).ready(function () {
+            datepickr('#txtDate1');
+
+            datepickr('#txtFrom', {
+                dateFormat: 'd/m/Y', // Wednesday, January 15, 2014
+                //altInput: document.getElementById('altInput'),
+                //altFormat: 'm-d-Y' // 01-15-2014
+            });
+
+            datepickr('#txtTo', {
+                dateFormat: 'd/m/Y', // Wednesday, January 15, 2014
+                //altInput: document.getElementById('altInput'),
+                //altFormat: 'm-d-Y' // 01-15-2014
+            });
+           
+            $('#btnRefresh').click(function () {
+
+                var fromVal = $('#txtFrom').val();
+                var toVal = $('#txtTo').val();
+                fromValdateArr = fromVal.split('/');
+                toValdateArr = toVal.split('/');
+
+
+                if (fromVal == '' || fromVal == null) {
+                    alert('please enter a from date');
+                    return;
+                }
+                
+                if (toVal == '' || toVal == null) {
+                    alert('please enter a To  date');
+                    return;
+                }
+
+
+                if ( (parseInt(fromValdateArr[2]) < 1994) || (parseInt(fromValdateArr[2]) > 2015))  {
+
+                    alert('please enter date range between 1994 and 2015');
+                    return;
+                }
+
+                if ((parseInt(toValdateArr[2]) < 1994) || (parseInt(toValdateArr[2]) > 2015)) {
+
+                    alert('please enter date range between 1994 and 2015');
+                    return;
+                }
+
+                if (parseInt(fromValdateArr[2]) > toValdateArr[2])  {
+
+                    alert('To date is lesser  than from ');
+                    return;
+                }
+
+
+                $.ajax({
+                    type: "GET",
+                    url: "Ajaxdata/GetMyJson",
+                    data: { fromDate: fromVal, toDate : toVal },
+                    //dataType: "json",
+                    success: OnSuccess,
+                    failure: OnFailure,
+                });//$.ajax
+
+            }
+            );
+            
+
+            $.ajax({
+                type: "GET",
+                url: "Ajaxdata/GetMyJson",
+                data: { name: a },
+                //dataType: "json",
+                success: OnSuccess,
+                failure: OnFailure,
+            });//$.ajax
+
+            //});//btnajx click
+
+            function OnSuccess(response) {
+                //console.log(response);
+
+                var msPoint = [];
+                var iPoint = [];
+                var dateArr = [];
+
+                for (var i in response) {
+                    var myDate = response[i].MyDate;
+                    dateArr = myDate.split('/');
+                    var Microsft = response[i].Microsft;
+                    var Apple = response[i].Apple;
+                    msPoint.push({ x: new Date(dateArr[2], dateArr[1], dateArr[0]), y: parseFloat(Microsft) });
+                    iPoint.push({ x: new Date(dateArr[2], dateArr[1], dateArr[0]), y: parseFloat(Apple) });
+
+                }
+                console.log(msPoint);
+                console.log(iPoint);
+
+                DisplayChart(msPoint, iPoint);
+                //Stub();
+            }
+
+            function OnFailure(response) {
+
+            }
+
+        });//document
+
+        function DisplayChart(msDp, iDp) {
+            var chart = new CanvasJS.Chart("chartContainer",
+    {
+        title: {
+            text: "Microsoft v/s Apple"
+        },
+        legend: {
+            fontSize: 18,
+            fontFamily: "tamoha",
+            //fontColor: "Sienna"      
+        },
+        //zoomEnabled: true,
+        //panEnabled: true,
+        zoomEnabled: true,
+        exportEnabled: true,
+        animationEnabled: true,
+        axisX: {
+            title: "timeline",
+            gridThickness: .5,
+            interval: 2,
+            intervalType: "year",
+        },
+        axisY: {
+            gridThickness: .5,
+            includeZero: true,
+            interval: 20
+        },
+        //axisY2: {
+        //    includeZero: true
+        //},
+        toolTip: {
+            shared: "true"
+        },
+        data: [
+            
+        {
+            type: "spline",
+            showInLegend: true,
+            name: "Microsoft",
+            markerSize: 1,
+            dataPoints: msDp
+        },
+        {
+            type: "spline",
+            showInLegend: true,
+            name: "Apple",
+            markerSize: 1,
+            dataPoints: iDp
+        }
+        ]
+    });
+            chart.render();
+        }
+
+
+      
+
+    </script>
+</head>
+<body>
+    <div>
+        <div>From Date :</div>
+        <input type ="text" id="txtFrom" />
+        <br />
+        <div>To Date:</div>
+        <input type ="text" id="txtTo" />
+        <br />
+        <input type ="button" id="btnRefresh" value="RefreshData" />
+    </div>
+   <div id="chartContainer" style="height: 500px; width: 75%;top:300px;"></div>
+</body>
+</html>
